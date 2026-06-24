@@ -18,4 +18,7 @@ app:
     architecture: arm64
   id: ari:cloud:ecosystem::app/6b7f01bb-edb5-4b99-91b2-49d6c8d27eab
 permissions:
-  scopes: []
+  scopes:
+    - read:jira-work
+    - write:jira-work
+    - read:jira-user

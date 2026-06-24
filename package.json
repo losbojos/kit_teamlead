@@ -10,7 +10,8 @@
     "ui:install": "npm install --prefix static/hello-world --legacy-peer-deps",
     "forge:whoami": "forge whoami",
     "forge:deploy": "forge deploy --non-interactive -e development",
-    "forge:install": "forge install --non-interactive --site bojos80.atlassian.net --product jira --environment development"
+    "forge:install": "forge install --non-interactive --site bojos80.atlassian.net --product jira --environment development",
+    "forge:upgrade": "forge install --non-interactive --upgrade --site bojos80.atlassian.net --product jira --environment development"
   },
   "devDependencies": {
     "eslint": "^8.56.0",
