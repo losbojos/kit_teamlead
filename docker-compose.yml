@@ -1,0 +1,7 @@
+services:
+  forge-dev:
+    working_dir: /app
+    env_file:
+      - .env
+    volumes:
+      - .:/app

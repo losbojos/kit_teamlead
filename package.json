@@ -1,0 +1,22 @@
+{
+  "name": "jira-project-page-custom-ui",
+  "version": "1.1.19-next.0",
+  "main": "src/index.js",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "env:load": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/load-env.ps1 -Remember",
+    "build:ui": "npm run build --prefix static/hello-world",
+    "ui:install": "npm install --prefix static/hello-world --legacy-peer-deps",
+    "forge:whoami": "forge whoami",
+    "forge:deploy": "forge deploy --non-interactive -e development",
+    "forge:install": "forge install --non-interactive --site bojos80.atlassian.net --product jira --environment development"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "eslint-plugin-react-hooks": "^4.6.0"
+  },
+  "dependencies": {
+    "@forge/resolver": "2.0.0-next.0"
+  }
+}

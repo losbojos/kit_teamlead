@@ -1,0 +1,21 @@
+modules:
+  jira:projectPage:
+    - key: kit-teamlead-hello-world-project-page
+      resource: main
+      resolver:
+        function: resolver
+      title: kit_teamlead
+  function:
+    - key: resolver
+      handler: index.handler
+resources:
+  - key: main
+    path: static/hello-world/build
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/6b7f01bb-edb5-4b99-91b2-49d6c8d27eab
+permissions:
+  scopes: []
