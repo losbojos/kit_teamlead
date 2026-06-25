@@ -9,7 +9,7 @@ kit_teamlead/
 ├── manifest.yml
 ├── package.json
 ├── src/index.js           # backend resolver
-├── static/hello-world/    # Custom UI
+├── static/dashboard/      # Custom UI
 ├── .env                   # Forge credentials (не коммитить)
 ├── scripts/
 ├── doc/                   # ТЗ

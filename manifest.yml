@@ -1,6 +1,6 @@
 modules:
   jira:projectPage:
-    - key: kit-teamlead-hello-world-project-page
+    - key: kit-teamlead-dashboard-project-page
       resource: main
       resolver:
         function: resolver
@@ -10,7 +10,7 @@ modules:
       handler: index.handler
 resources:
   - key: main
-    path: static/hello-world/build
+    path: static/dashboard/build
 app:
   runtime:
     name: nodejs24.x
