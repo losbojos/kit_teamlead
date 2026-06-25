@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { invoke, view } from '@forge/bridge';
+import { Box, CircularProgress, Typography } from '@mui/material';
+import TasksTable from './TasksTable';
 
 function App() {
     const [projectKey, setProjectKey] = useState(null);
@@ -41,31 +43,32 @@ function App() {
     }, []);
 
     if (loading) {
-        return <div>Загрузка задач...</div>;
+        return (
+            <Box display="flex" alignItems="center" gap={2} p={2}>
+                <CircularProgress size={24} />
+                <Typography>Загрузка задач...</Typography>
+            </Box>
+        );
     }
 
     if (error) {
-        return <div>Ошибка: {error}</div>;
+        return (
+            <Box p={2}>
+                <Typography color="error">Ошибка: {error}</Typography>
+            </Box>
+        );
     }
 
     return (
-        <div>
-            <h3>Проект: {projectKey}</h3>
-            <p>Задач: {issues.length}</p>
-            <ul>
-                {issues.map((issue) => (
-                    <li key={issue.key}>
-                        <strong>{issue.key}</strong> — {issue.summary}
-                        {' | '}
-                        {issue.status}
-                        {' | '}
-                        {issue.assignee || 'без исполнителя'}
-                        {' | '}
-                        {issue.priority || 'без приоритета'}
-                    </li>
-                ))}
-            </ul>
-        </div>
+        <Box p={2}>
+            <Typography variant="h6" gutterBottom>
+                Проект: {projectKey}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+                Задач: {issues.length}
+            </Typography>
+            <TasksTable issues={issues} />
+        </Box>
     );
 }
 
