@@ -25,5 +25,5 @@ export const INLINE_FLEX_CENTER_STYLE: CSSProperties = {
 
 /** Отступ справа от ячейки с индикатором до колонки Key. */
 export const TABLE_INDICATOR_CELL_STYLE: CSSProperties = {
-    paddingRight: 8,
+    paddingRight: 6,
 };
