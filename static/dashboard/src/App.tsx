@@ -3,7 +3,7 @@ import { invoke, view } from '@forge/bridge';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import StatsLegend from './components/StatsLegend';
 import TasksTable from './TasksTable';
-import { GetIssuesResult, isGetIssuesError } from './types/api';
+import { GetIssuesResult, isApiError } from './types/api';
 import { Issue } from './types/issue';
 import { countIssueProblems } from './utils/issueRules';
 
@@ -29,7 +29,7 @@ function App() {
 
                 const result = await invoke('getIssues', { projectKey: key }) as GetIssuesResult;
 
-                if (isGetIssuesError(result)) {
+                if (isApiError(result)) {
                     setError(result.error);
                     setLoading(false);
                     return;

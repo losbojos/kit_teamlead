@@ -18,3 +18,12 @@ export interface JiraIssue {
 export interface JiraSearchJqlResponse {
     issues?: JiraIssue[];
 }
+
+/** Пользователь из GET /rest/api/3/user/assignable/search */
+export interface JiraAssignableUser {
+    accountId: string;
+    displayName: string;
+    avatarUrls?: {
+        '48x48'?: string;
+    };
+}

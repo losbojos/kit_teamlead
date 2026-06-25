@@ -1,7 +1,12 @@
 export type {
+    ApiError,
+    ApiResult,
     GetIssuesResult,
     GetIssuesSuccess,
-    GetIssuesError,
+    GetProjectMembersResult,
+    GetProjectMembersSuccess,
+    IssueSuccess,
+    IssueResult,
 } from '../shared/types/api';
 
-export { isGetIssuesError } from '../shared/types/api';
+export { isApiError } from '../shared/types/api';
