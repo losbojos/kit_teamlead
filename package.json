@@ -10,6 +10,7 @@
     "ui:install": "npm install --prefix static/hello-world --legacy-peer-deps",
     "forge:whoami": "forge whoami",
     "forge:deploy": "forge deploy --non-interactive -e development",
+    "deploy": "npm run build:ui && npm run forge:deploy",    
     "forge:install": "forge install --non-interactive --site bojos80.atlassian.net --product jira --environment development",
     "forge:upgrade": "forge install --non-interactive --upgrade --site bojos80.atlassian.net --product jira --environment development"
   },
@@ -18,6 +19,7 @@
     "eslint-plugin-react-hooks": "^4.6.0"
   },
   "dependencies": {
+    "@forge/api": "^7.2.2",
     "@forge/resolver": "2.0.0-next.0"
   }
 }
