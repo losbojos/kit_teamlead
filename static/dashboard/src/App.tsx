@@ -2,16 +2,50 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { invoke, view } from '@forge/bridge';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import StatsLegend from './components/StatsLegend';
+import AssignModal from './components/AssignModal';
+import PriorityModal from './components/PriorityModal';
 import TasksTable from './TasksTable';
 import { GetIssuesResult, isApiError } from './types/api';
-import { Issue } from './types/issue';
+import { ISSUE_PROBLEM, Issue, IssueProblemType } from './types/issue';
 import { countIssueProblems } from './utils/issueRules';
+
+interface FixTarget {
+    issue: Issue;
+    problemType: IssueProblemType;
+}
 
 function App() {
     const [projectKey, setProjectKey] = useState<string | null>(null);
     const [issues, setIssues] = useState<Issue[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [fixTarget, setFixTarget] = useState<FixTarget | null>(null);
+
+    const handleFixClick = (issue: Issue, problemType: IssueProblemType) => {
+        setFixTarget({ issue, problemType });
+    };
+
+    const handleFixModalClose = () => {
+        setFixTarget(null);
+    };
+
+    const handleIssueUpdated = (updatedIssue: Issue) => {
+        setIssues((prev) => prev.map((item) => (
+            item.key === updatedIssue.key ? updatedIssue : item
+        )));
+        setFixTarget(null);
+    };
+
+    const assignModalOpen = Boolean(
+        fixTarget
+        && fixTarget.problemType === ISSUE_PROBLEM.UNASSIGNED
+        && projectKey,
+    );
+
+    const priorityModalOpen = Boolean(
+        fixTarget
+        && fixTarget.problemType === ISSUE_PROBLEM.LOW_PRIORITY_DEADLINE,
+    );
 
     useEffect(() => {
         async function loadIssues() {
@@ -70,6 +104,22 @@ function App() {
 
     return (
         <Box p={2}>
+            {projectKey && (
+                <AssignModal
+                    open={assignModalOpen}
+                    issue={fixTarget?.issue ?? null}
+                    projectKey={projectKey}
+                    onClose={handleFixModalClose}
+                    onAssigned={handleIssueUpdated}
+                />
+            )}
+            <PriorityModal
+                open={priorityModalOpen}
+                issue={fixTarget?.issue ?? null}
+                issues={issues}
+                onClose={handleFixModalClose}
+                onUpdated={handleIssueUpdated}
+            />
             <Typography variant="h6" gutterBottom>
                 Проект: {projectKey}
             </Typography>
@@ -77,7 +127,7 @@ function App() {
                 total={issues.length}
                 problemCounts={problemCounts}
             />
-            <TasksTable issues={issues} />
+            <TasksTable issues={issues} onFixClick={handleFixClick} />
         </Box>
     );
 }
