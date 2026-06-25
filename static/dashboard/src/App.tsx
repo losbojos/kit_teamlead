@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { invoke, view } from '@forge/bridge';
 import { Box, CircularProgress, Typography } from '@mui/material';
-import StatsLegend from './components/StatsLegend';
+import AutoAssignConfirmDialog from './components/AutoAssignConfirmDialog';
+import ControlPanel from './components/ControlPanel';
 import AssignModal from './components/AssignModal';
 import PriorityModal from './components/PriorityModal';
 import TasksTable from './TasksTable';
-import { GetIssuesResult, isApiError } from './types/api';
+import { AutoAssignResult, GetIssuesResult, isApiError } from './types/api';
 import { ISSUE_PROBLEM, Issue, IssueProblemType } from './types/issue';
 import { countIssueProblems } from './utils/issueRules';
 
@@ -20,6 +21,9 @@ function App() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [fixTarget, setFixTarget] = useState<FixTarget | null>(null);
+    const [autoAssignOpen, setAutoAssignOpen] = useState(false);
+    const [autoAssigning, setAutoAssigning] = useState(false);
+    const [autoAssignError, setAutoAssignError] = useState<string | null>(null);
 
     const handleFixClick = (issue: Issue, problemType: IssueProblemType) => {
         setFixTarget({ issue, problemType });
@@ -34,6 +38,49 @@ function App() {
             item.key === updatedIssue.key ? updatedIssue : item
         )));
         setFixTarget(null);
+    };
+
+    const handleAutoAssignClick = () => {
+        setAutoAssignError(null);
+        setAutoAssignOpen(true);
+    };
+
+    const handleAutoAssignClose = () => {
+        if (!autoAssigning) {
+            setAutoAssignOpen(false);
+            setAutoAssignError(null);
+        }
+    };
+
+    const handleAutoAssignConfirm = async () => {
+        if (!projectKey) {
+            return;
+        }
+
+        setAutoAssigning(true);
+        setAutoAssignError(null);
+
+        try {
+            const result = await invoke('autoAssignUnassigned', { projectKey }) as AutoAssignResult;
+
+            if (isApiError(result)) {
+                setAutoAssignError(result.error);
+                return;
+            }
+
+            setIssues((prev) => {
+                const updatedByKey = new Map(result.issues.map((item) => [item.key, item]));
+                return prev.map((item) => updatedByKey.get(item.key) ?? item);
+            });
+            setAutoAssignOpen(false);
+        } catch (assignError) {
+            const message = assignError instanceof Error
+                ? assignError.message
+                : 'Не удалось выполнить auto-assign';
+            setAutoAssignError(message);
+        } finally {
+            setAutoAssigning(false);
+        }
     };
 
     const assignModalOpen = Boolean(
@@ -84,6 +131,7 @@ function App() {
     }, []);
 
     const problemCounts = useMemo(() => countIssueProblems(issues), [issues]);
+    const unassignedCount = problemCounts[ISSUE_PROBLEM.UNASSIGNED];
 
     if (loading) {
         return (
@@ -120,12 +168,24 @@ function App() {
                 onClose={handleFixModalClose}
                 onUpdated={handleIssueUpdated}
             />
+            {projectKey && (
+                <AutoAssignConfirmDialog
+                    open={autoAssignOpen}
+                    count={unassignedCount}
+                    loading={autoAssigning}
+                    error={autoAssignError}
+                    onClose={handleAutoAssignClose}
+                    onConfirm={handleAutoAssignConfirm}
+                />
+            )}
             <Typography variant="h6" gutterBottom>
                 Проект: {projectKey}
             </Typography>
-            <StatsLegend
+            <ControlPanel
                 total={issues.length}
                 problemCounts={problemCounts}
+                unassignedCount={unassignedCount}
+                onAutoAssignClick={handleAutoAssignClick}
             />
             <TasksTable issues={issues} onFixClick={handleFixClick} />
         </Box>

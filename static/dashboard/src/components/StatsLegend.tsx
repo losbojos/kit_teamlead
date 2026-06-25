@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { CSSProperties } from 'react';
 import { IssueIndicatorDot } from './IssueIndicatorDot';
 import { ISSUE_PROBLEM_CATEGORIES } from '../utils/issueRules';
 import { IssueProblemCounts } from '../types/issue';
@@ -22,14 +22,15 @@ function LegendItem({ color, label, value }: LegendItemProps) {
 export interface StatsLegendProps {
     total: number;
     problemCounts: IssueProblemCounts;
+    style?: CSSProperties;
 }
 
 /**
  * Строка статистики и легенды над таблицей задач.
  */
-function StatsLegend({ total, problemCounts }: StatsLegendProps) {
+function StatsLegend({ total, problemCounts, style }: StatsLegendProps) {
     return (
-        <div style={LEGEND_CONTAINER_STYLE}>
+        <div style={{ ...LEGEND_CONTAINER_STYLE, ...style }}>
             <span>Задач: {total}</span>
             {ISSUE_PROBLEM_CATEGORIES.map(({ type, color, label }) => (
                 <LegendItem

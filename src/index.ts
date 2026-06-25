@@ -2,14 +2,17 @@ import api, { route } from '@forge/api';
 import Resolver from '@forge/resolver';
 import type {
     ApiError,
+    AutoAssignSuccess,
     GetIssuesSuccess,
     GetProjectMembersSuccess,
     IssueSuccess,
 } from '../shared/types/api';
+import { autoAssignUnassignedIssues } from './services/autoAssign';
 import { mapIssue } from './mappers/issue';
 import { mapMember } from './mappers/member';
 import { fetchIssueByKey } from './services/fetchIssue';
-import type { JiraAssignableUser, JiraSearchJqlResponse } from './types/jira';
+import { searchIssuesByJql } from './services/jiraSearch';
+import type { JiraAssignableUser } from './types/jira';
 
 const resolver = new Resolver();
 
@@ -40,28 +43,10 @@ resolver.define('getIssues', async (req): Promise<GetIssuesSuccess | ApiError> =
 
     try {
         const jql = `project = "${projectKey}" ORDER BY created DESC`;
-        const response = await api.asUser().requestJira(route`/rest/api/3/search/jql`, {
-            method: 'POST',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                jql,
-                fields: ['summary', 'status', 'assignee', 'priority', 'duedate'],
-            }),
-        });
-
-        if (!response.ok) {
-            const details = await response.text();
-            console.error('Jira search failed:', response.status, details);
-            return { error: `Ошибка Jira API (${response.status})` };
-        }
-
-        const data = (await response.json()) as JiraSearchJqlResponse;
+        const issues = await searchIssuesByJql(jql, ['summary', 'status', 'assignee', 'priority', 'duedate']);
 
         return {
-            issues: (data.issues || []).map(mapIssue),
+            issues: issues.map(mapIssue),
         };
     } catch (error) {
         console.error('getIssues failed:', error);
@@ -195,6 +180,26 @@ resolver.define('updateIssuePriority', async (req): Promise<IssueSuccess | ApiEr
         console.error('updateIssuePriority failed:', error);
         const message =
             error instanceof Error ? error.message : 'Не удалось изменить приоритет';
+        return { error: message };
+    }
+});
+
+/**
+ * Массово назначает свободные задачи активным участникам.
+ */
+resolver.define('autoAssignUnassigned', async (req): Promise<AutoAssignSuccess | ApiError> => {
+    const { projectKey } = (req.payload || {}) as ProjectKeyPayload;
+
+    if (!projectKey) {
+        return { error: 'Не указан projectKey' };
+    }
+
+    try {
+        return await autoAssignUnassignedIssues(projectKey);
+    } catch (error) {
+        console.error('autoAssignUnassigned failed:', error);
+        const message =
+            error instanceof Error ? error.message : 'Не удалось выполнить auto-assign';
         return { error: message };
     }
 });

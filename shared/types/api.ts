@@ -39,3 +39,12 @@ export interface IssueSuccess {
 }
 
 export type IssueResult = ApiResult<IssueSuccess>;
+
+// --- autoAssignUnassigned ---
+
+export interface AutoAssignSuccess {
+    assignedCount: number;
+    issues: Issue[];
+}
+
+export type AutoAssignResult = ApiResult<AutoAssignSuccess>;

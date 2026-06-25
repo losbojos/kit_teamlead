@@ -1,6 +1,8 @@
 export type {
     ApiError,
     ApiResult,
+    AutoAssignResult,
+    AutoAssignSuccess,
     GetIssuesResult,
     GetIssuesSuccess,
     GetProjectMembersResult,
