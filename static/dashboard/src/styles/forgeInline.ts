@@ -1,10 +1,12 @@
+import { CSSProperties } from 'react';
+
 /**
  * Inline-стили для Forge.
  * MUI sx иногда ломается в Jira, а так надёжнее.
  */
 
 /** Строка легенды со статистикой. */
-export const LEGEND_CONTAINER_STYLE = {
+export const LEGEND_CONTAINER_STYLE: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     flexWrap: 'wrap',
@@ -15,13 +17,13 @@ export const LEGEND_CONTAINER_STYLE = {
 };
 
 /** Горизонтальная группа: кружок + текст. */
-export const INLINE_FLEX_CENTER_STYLE = {
+export const INLINE_FLEX_CENTER_STYLE: CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '4px',
 };
 
 /** Отступ справа от ячейки с индикатором до колонки Key. */
-export const TABLE_INDICATOR_CELL_STYLE = {
+export const TABLE_INDICATOR_CELL_STYLE: CSSProperties = {
     paddingRight: 8,
 };

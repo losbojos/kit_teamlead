@@ -11,12 +11,17 @@ import {
 } from '@mui/material';
 import { IssueIndicatorDot } from './components/IssueIndicatorDot';
 import { getIssueIndicatorColor } from './utils/issueRules';
+import { Issue } from './types/issue';
 import { TABLE_INDICATOR_CELL_STYLE } from './styles/forgeInline';
+
+export interface TasksTableProps {
+    issues: Issue[];
+}
 
 /**
  * Таблица задач проекта (MUI Table)
  */
-function TasksTable({ issues }) {
+function TasksTable({ issues }: TasksTableProps) {
     if (issues.length === 0) {
         return (
             <Typography variant="body2" color="text.secondary">

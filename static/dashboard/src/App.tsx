@@ -3,12 +3,14 @@ import { invoke, view } from '@forge/bridge';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import StatsLegend from './components/StatsLegend';
 import TasksTable from './TasksTable';
+import { GetIssuesResult, isGetIssuesError } from './types/api';
+import { Issue } from './types/issue';
 import { countIssueProblems } from './utils/issueRules';
 
 function App() {
-    const [projectKey, setProjectKey] = useState(null);
-    const [issues, setIssues] = useState([]);
-    const [error, setError] = useState(null);
+    const [projectKey, setProjectKey] = useState<string | null>(null);
+    const [issues, setIssues] = useState<Issue[]>([]);
+    const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -25,17 +27,20 @@ function App() {
 
                 setProjectKey(key);
 
-                const result = await invoke('getIssues', { projectKey: key });
+                const result = await invoke('getIssues', { projectKey: key }) as GetIssuesResult;
 
-                if (result?.error) {
+                if (isGetIssuesError(result)) {
                     setError(result.error);
                     setLoading(false);
                     return;
                 }
 
-                setIssues(result?.issues || []);
+                setIssues(result.issues || []);
             } catch (loadError) {
-                setError(loadError.message || 'Ошибка загрузки задач');
+                const message = loadError instanceof Error
+                    ? loadError.message
+                    : 'Ошибка загрузки задач';
+                setError(message);
             } finally {
                 setLoading(false);
             }

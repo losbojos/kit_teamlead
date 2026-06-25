@@ -1,10 +1,15 @@
-import React from 'react';
+import React, { CSSProperties } from 'react';
 
 /** Размер цветного круга-индикатора */
 export const INDICATOR_DOT_SIZE = 12;
 
-function buildDotStyle({ color, size }) {
-    const base = {
+export interface IssueIndicatorDotProps {
+    color: string | null;
+    size?: number;
+}
+
+function buildDotStyle(color: string | null, size: number): CSSProperties {
+    const base: CSSProperties = {
         display: 'inline-block',
         width: size,
         verticalAlign: 'middle',
@@ -26,8 +31,8 @@ function buildDotStyle({ color, size }) {
 /**
  * Цветной круг-индикатор проблемной задачи.
  */
-export function IssueIndicatorDot({ color, size = INDICATOR_DOT_SIZE }) {
+export function IssueIndicatorDot({ color, size = INDICATOR_DOT_SIZE }: IssueIndicatorDotProps) {
     return (
-        <span style={buildDotStyle({ color, size })} />
+        <span style={buildDotStyle(color, size)} />
     );
 }

@@ -13,8 +13,11 @@
     "react-dom": "^16"
   },
   "scripts": {
+    "prestart": "node ../../scripts/sync-shared.js",
     "start": "react-scripts start",
+    "prebuild": "node ../../scripts/sync-shared.js",
     "build": "react-scripts build",
+    "typecheck": "tsc --noEmit",
     "eject": "react-scripts eject"
   },
   "browserslist": {
@@ -30,6 +33,10 @@
     ]
   },
   "devDependencies": {
-    "react-scripts": "^5.0.1"
+    "@types/node": "^20.19.0",
+    "@types/react": "^16.14.65",
+    "@types/react-dom": "^16.9.25",
+    "react-scripts": "^5.0.1",
+    "typescript": "^5.9.3"
   }
 }

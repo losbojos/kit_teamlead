@@ -60,3 +60,6 @@ Thumbs.db
 
 static/**/node_modules/
 static/**/build/
+
+# Копия shared/ для CRA (генерируется scripts/sync-shared.js)
+static/dashboard/src/shared/

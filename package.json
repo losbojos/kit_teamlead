@@ -1,12 +1,14 @@
 {
   "name": "jira-project-page-custom-ui",
   "version": "1.1.19-next.0",
-  "main": "src/index.js",
+  "main": "src/index.ts",
   "license": "MIT",
   "private": true,
   "scripts": {
     "env:load": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/load-env.ps1 -Remember",
-    "build:ui": "npm run build --prefix static/dashboard",
+    "sync:shared": "node scripts/sync-shared.js",
+    "build:ui": "npm run sync:shared && npm run build --prefix static/dashboard",
+    "typecheck": "npm run sync:shared && tsc --noEmit && npm run typecheck --prefix static/dashboard",
     "ui:install": "npm install --prefix static/dashboard --legacy-peer-deps",
     "forge:whoami": "forge whoami",
     "forge:deploy": "forge deploy --non-interactive -e development",
@@ -15,8 +17,10 @@
     "forge:upgrade": "forge install --non-interactive --upgrade --site bojos80.atlassian.net --product jira --environment development"
   },
   "devDependencies": {
+    "@types/node": "^20.19.0",
     "eslint": "^8.56.0",
-    "eslint-plugin-react-hooks": "^4.6.0"
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@forge/api": "^7.2.2",

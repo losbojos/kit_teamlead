@@ -4,9 +4,15 @@ import App from './App';
 
 import '@atlaskit/css-reset';
 
+const root = document.getElementById('root');
+
+if (!root) {
+    throw new Error('Root element #root not found');
+}
+
 ReactDOM.render(
     <React.StrictMode>
         <App />
     </React.StrictMode>,
-    document.getElementById('root')
+    root
 );

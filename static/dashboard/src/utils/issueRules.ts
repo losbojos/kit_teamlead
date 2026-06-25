@@ -1,3 +1,11 @@
+import {
+    ISSUE_PROBLEM,
+    IssueProblemCategory,
+    IssueProblemCounts,
+    IssueProblemType,
+    Issue,
+} from '../types/issue';
+
 /**
  * Названия низких приоритетов в Jira (EN и RU).
  */
@@ -16,14 +24,14 @@ const DEADLINE_DAYS_THRESHOLD = 7;
 /**
  * Задача без исполнителя.
  */
-export function isUnassigned(issue) {
+export function isUnassigned(issue: Issue): boolean {
     return !issue.assigneeAccountId;
 }
 
 /**
  * Низкий приоритет
  */
-export function isLowPriority(priorityName) {
+export function isLowPriority(priorityName: string | null): boolean {
     if (!priorityName) {
         return false;
     }
@@ -34,7 +42,7 @@ export function isLowPriority(priorityName) {
 /**
  * Дней до дедлайна (отрицательное — просрочен).
  */
-export function daysUntilDue(dueDate) {
+export function daysUntilDue(dueDate: string): number | null {
     if (!dueDate) {
         return null;
     }
@@ -50,7 +58,7 @@ export function daysUntilDue(dueDate) {
 /**
  * Низкий приоритет и дедлайн в ближайшее время (или просрочен).
  */
-export function isLowPriorityNearDeadline(issue) {
+export function isLowPriorityNearDeadline(issue: Issue): boolean {
     if (!issue.dueDate) {
         return false;
     }
@@ -66,18 +74,16 @@ export function isLowPriorityNearDeadline(issue) {
 /**
  * Категории проблемных задач.
  * Порядок в массиве = порядок в легенде и приоритет проверки (первое совпадение).
- *
- * @type {Array<{ type: string, color: string, label: string, matches: (issue: object) => boolean }>}
  */
-export const ISSUE_PROBLEM_CATEGORIES = [
+export const ISSUE_PROBLEM_CATEGORIES: IssueProblemCategory[] = [
     {
-        type: 'unassigned',
+        type: ISSUE_PROBLEM.UNASSIGNED,
         color: '#e53935',
         label: 'Без исполнителя',
         matches: isUnassigned,
     },
     {
-        type: 'low_priority_deadline',
+        type: ISSUE_PROBLEM.LOW_PRIORITY_DEADLINE,
         color: '#f9a825',
         label: 'С риском дедлайна',
         matches: isLowPriorityNearDeadline,
@@ -85,24 +91,24 @@ export const ISSUE_PROBLEM_CATEGORIES = [
 ];
 
 /** Быстрый поиск категории по type. */
-const CATEGORY_BY_TYPE = Object.fromEntries(
+const CATEGORY_BY_TYPE: Record<IssueProblemType, IssueProblemCategory> = Object.fromEntries(
     ISSUE_PROBLEM_CATEGORIES.map((category) => [category.type, category])
-);
+) as Record<IssueProblemType, IssueProblemCategory>;
 
 /**
  * Пустая мапа счётчиков (все ключи — 0).
  */
-export function createEmptyIssueProblemCounts() {
-    return ISSUE_PROBLEM_CATEGORIES.reduce((counts, { type }) => {
+export function createEmptyIssueProblemCounts(): IssueProblemCounts {
+    return ISSUE_PROBLEM_CATEGORIES.reduce<IssueProblemCounts>((counts, { type }) => {
         counts[type] = 0;
         return counts;
-    }, {});
+    }, {} as IssueProblemCounts);
 }
 
 /**
  * Возвращает тип проблемы или null, если задача не проблемная.
  */
-export function getIssueProblem(issue) {
+export function getIssueProblem(issue: Issue): IssueProblemType | null {
     const category = ISSUE_PROBLEM_CATEGORIES.find(({ matches }) => matches(issue));
     return category ? category.type : null;
 }
@@ -110,14 +116,14 @@ export function getIssueProblem(issue) {
 /**
  * true, если к задаче применимо хотя бы одно правило из ТЗ.
  */
-export function isProblematicIssue(issue) {
+export function isProblematicIssue(issue: Issue): boolean {
     return getIssueProblem(issue) !== null;
 }
 
 /**
  * Считает проблемные задачи: мапа { тип проблемы → количество }.
  */
-export function countIssueProblems(issues) {
+export function countIssueProblems(issues: Issue[]): IssueProblemCounts {
     const counts = createEmptyIssueProblemCounts();
 
     issues.forEach((issue) => {
@@ -134,7 +140,7 @@ export function countIssueProblems(issues) {
 /**
  * Цвет индикатора-круга (🔴 / 🟡) или null для обычных задач.
  */
-export function getIssueIndicatorColor(issue) {
+export function getIssueIndicatorColor(issue: Issue): string | null {
     const problem = getIssueProblem(issue);
     return problem ? CATEGORY_BY_TYPE[problem].color : null;
 }

@@ -1,12 +1,19 @@
 import api, { route } from '@forge/api';
 import Resolver from '@forge/resolver';
+import type { GetIssuesError, GetIssuesSuccess } from '../shared/types/api';
+import type { Issue } from '../shared/types/issue';
+import type { JiraIssue, JiraSearchJqlResponse } from './types/jira';
 
 const resolver = new Resolver();
+
+interface GetIssuesPayload {
+    projectKey?: string;
+}
 
 /**
  * Преобразует задачу из ответа Jira REST API в компактный объект для UI.
  */
-function mapIssue(issue) {
+function mapIssue(issue: JiraIssue): Issue {
     const fields = issue.fields || {};
 
     return {
@@ -25,8 +32,8 @@ function mapIssue(issue) {
  * Загружает задачи проекта через Jira REST API v3.
  * Вызывается из Custom UI: invoke('getIssues', { projectKey }).
  */
-resolver.define('getIssues', async (req) => {
-    const { projectKey } = req.payload || {};
+resolver.define('getIssues', async (req): Promise<GetIssuesSuccess | GetIssuesError> => {
+    const { projectKey } = (req.payload || {}) as GetIssuesPayload;
 
     if (!projectKey) {
         return { error: 'Не указан projectKey' };
@@ -52,14 +59,16 @@ resolver.define('getIssues', async (req) => {
             return { error: `Ошибка Jira API (${response.status})` };
         }
 
-        const data = await response.json();
+        const data = await response.json() as JiraSearchJqlResponse;
 
         return {
             issues: (data.issues || []).map(mapIssue),
         };
     } catch (error) {
         console.error('getIssues failed:', error);
-        return { error: error.message || 'Не удалось загрузить задачи' };
+        const message =
+        error instanceof Error ? error.message : 'Не удалось загрузить задачи';
+        return { error: message };        
     }
 });
 
