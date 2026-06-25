@@ -9,9 +9,12 @@ import {
     TableRow,
     Typography,
 } from '@mui/material';
+import { IssueIndicatorDot } from './components/IssueIndicatorDot';
+import { getIssueIndicatorColor } from './utils/issueRules';
+import { TABLE_INDICATOR_CELL_STYLE } from './styles/forgeInline';
 
 /**
- * Таблица задач проекта
+ * Таблица задач проекта (MUI Table)
  */
 function TasksTable({ issues }) {
     if (issues.length === 0) {
@@ -23,26 +26,32 @@ function TasksTable({ issues }) {
     }
 
     return (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} variant="outlined">
             <Table size="small">
                 <TableHead>
                     <TableRow>
+                        <TableCell style={TABLE_INDICATOR_CELL_STYLE} />
                         <TableCell>Key</TableCell>
                         <TableCell>Summary</TableCell>
                         <TableCell>Status</TableCell>
                         <TableCell>Assignee</TableCell>
                         <TableCell>Priority</TableCell>
+                        <TableCell>Due date</TableCell>
                         <TableCell>Actions</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {issues.map((issue) => (
                         <TableRow key={issue.key}>
+                            <TableCell style={TABLE_INDICATOR_CELL_STYLE}>
+                                <IssueIndicatorDot color={getIssueIndicatorColor(issue)} />
+                            </TableCell>
                             <TableCell>{issue.key}</TableCell>
                             <TableCell>{issue.summary}</TableCell>
                             <TableCell>{issue.status}</TableCell>
                             <TableCell>{issue.assignee || '—'}</TableCell>
                             <TableCell>{issue.priority || '—'}</TableCell>
+                            <TableCell>{issue.dueDate || '—'}</TableCell>
                             <TableCell />
                         </TableRow>
                     ))}

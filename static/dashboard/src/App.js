@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { invoke, view } from '@forge/bridge';
 import { Box, CircularProgress, Typography } from '@mui/material';
+import StatsLegend from './components/StatsLegend';
 import TasksTable from './TasksTable';
+import { countIssueProblems } from './utils/issueRules';
 
 function App() {
     const [projectKey, setProjectKey] = useState(null);
@@ -42,6 +44,8 @@ function App() {
         loadIssues();
     }, []);
 
+    const problemCounts = useMemo(() => countIssueProblems(issues), [issues]);
+
     if (loading) {
         return (
             <Box display="flex" alignItems="center" gap={2} p={2}>
@@ -64,9 +68,10 @@ function App() {
             <Typography variant="h6" gutterBottom>
                 Проект: {projectKey}
             </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-                Задач: {issues.length}
-            </Typography>
+            <StatsLegend
+                total={issues.length}
+                problemCounts={problemCounts}
+            />
             <TasksTable issues={issues} />
         </Box>
     );
