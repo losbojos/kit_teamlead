@@ -1,0 +1,11 @@
+node_modules
+static/dashboard/node_modules
+static/dashboard/build
+dist
+.git
+.forge
+.local
+*.log
+.env
+.env.*
+!.env.example

@@ -14,7 +14,9 @@
     "forge:deploy": "forge deploy --non-interactive -e development",
     "deploy": "npm run build:ui && npm run forge:deploy",    
     "forge:install": "forge install --non-interactive --site bojos80.atlassian.net --product jira --environment development",
-    "forge:upgrade": "forge install --non-interactive --upgrade --site bojos80.atlassian.net --product jira --environment development"
+    "forge:upgrade": "forge install --non-interactive --upgrade --site bojos80.atlassian.net --product jira --environment development",
+    "docker:build": "docker compose build",
+    "docker:shell": "docker compose run --rm forge-dev sh"
   },
   "devDependencies": {
     "@types/node": "^20.19.0",

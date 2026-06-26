@@ -1,7 +1,23 @@
+# Локальная среда разработки в контейнере.
+# Запуск: docker compose build && docker compose run --rm forge-dev sh
+
 services:
   forge-dev:
+    build: .
+    container_name: kit-teamlead-forge-dev
     working_dir: /app
+    volumes:
+      # Код с хоста — изменения видны внутри контейнера
+      - .:/app
+      # node_modules храним в именованных volume, чтобы не ломать Linux-пакеты на Windows
+      - forge-root-node-modules:/app/node_modules
+      - forge-ui-node-modules:/app/static/dashboard/node_modules
     env_file:
       - .env
-    volumes:
-      - .:/app
+    stdin_open: true
+    tty: true
+    command: sh
+
+volumes:
+  forge-root-node-modules:
+  forge-ui-node-modules:
