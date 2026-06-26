@@ -109,6 +109,16 @@ export const FORGE_MODAL_CONFIRM_BUTTON_STYLE: CSSProperties = {
     minWidth: 128,
 };
 
+/** Шапка: выбор проекта */
+export const FORGE_HEADER_ROW_STYLE: CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    flexWrap: 'wrap',
+    gap: '16px',
+    marginBottom: '16px',
+};
+
 /** Контейнер вкладок — отступ снизу (sx не работает). */
 export const FORGE_TABS_ROOT_STYLE: CSSProperties = {
     marginTop: 2,
@@ -118,4 +128,28 @@ export const FORGE_TABS_ROOT_STYLE: CSSProperties = {
 /** Отступ между кнопками вкладок. */
 export const FORGE_TAB_STYLE: CSSProperties = {
     marginRight: 4,
+};
+
+/** Обёртка dropdown проекта. */
+export const FORGE_PROJECT_SELECT_WRAPPER_STYLE: CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    minWidth: '260px',
+};
+
+export const FORGE_PROJECT_SELECT_LABEL_STYLE: CSSProperties = {
+    fontSize: '0.75rem',
+    color: 'rgba(0, 0, 0, 0.6)',
+};
+
+/** Нативный select — MUI Select ломается в Forge iframe (огромная стрелка). */
+export const FORGE_PROJECT_SELECT_STYLE: CSSProperties = {
+    padding: '8px 12px',
+    fontSize: '0.875rem',
+    border: '1px solid #c4c4c4',
+    borderRadius: '4px',
+    backgroundColor: '#fff',
+    minWidth: '260px',
+    cursor: 'pointer',
 };

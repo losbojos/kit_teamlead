@@ -7,6 +7,8 @@ export type {
     GetIssuesSuccess,
     GetProjectMembersResult,
     GetProjectMembersSuccess,
+    GetProjectsResult,
+    GetProjectsSuccess,
     IssueSuccess,
     IssueResult,
 } from '../shared/types/api';

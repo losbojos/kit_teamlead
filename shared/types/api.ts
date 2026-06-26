@@ -1,5 +1,6 @@
 import type { Issue } from './issue';
 import type { ProjectMember } from './member';
+import type { Project } from './project';
 
 /** Общий формат ошибки от любого resolver. */
 export interface ApiError {
@@ -20,6 +21,15 @@ export interface GetIssuesSuccess {
 }
 
 export type GetIssuesResult = ApiResult<GetIssuesSuccess>;
+
+
+// --- getProjects ---
+
+export interface GetProjectsSuccess {
+    projects: Project[];
+}
+
+export type GetProjectsResult = ApiResult<GetProjectsSuccess>;
 
 
 // --- getProjectMembers ---

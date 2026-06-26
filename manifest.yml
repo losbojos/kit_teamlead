@@ -1,4 +1,11 @@
 modules:
+  jira:globalPage:
+    - key: kit-teamlead-dashboard-global-page
+      resource: main
+      resolver:
+        function: resolver
+      title: kit_teamlead
+      route: kit-teamlead
   jira:projectPage:
     - key: kit-teamlead-dashboard-project-page
       resource: main

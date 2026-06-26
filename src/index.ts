@@ -5,14 +5,16 @@ import type {
     AutoAssignSuccess,
     GetIssuesSuccess,
     GetProjectMembersSuccess,
+    GetProjectsSuccess,
     IssueSuccess,
 } from '../shared/types/api';
 import { autoAssignUnassignedIssues } from './services/autoAssign';
 import { mapIssue } from './mappers/issue';
 import { mapMember } from './mappers/member';
+import { mapProject } from './mappers/project';
 import { fetchIssueByKey } from './services/fetchIssue';
 import { searchIssuesByJql } from './services/jiraSearch';
-import type { JiraAssignableUser } from './types/jira';
+import type { JiraAssignableUser, JiraProjectSearchResponse } from './types/jira';
 
 const resolver = new Resolver();
 
@@ -29,6 +31,39 @@ interface UpdateIssuePriorityPayload {
     issueKey?: string;
     priorityId?: string;
 }
+
+/**
+ * Список проектов Jira, доступных текущему пользователю.
+ * Вызывается из Custom UI: invoke('getProjects').
+ */
+resolver.define('getProjects', async (): Promise<GetProjectsSuccess | ApiError> => {
+    try {
+        const response = await api.asUser().requestJira(
+            route`/rest/api/3/project/search?maxResults=50`,
+            {
+                method: 'GET',
+                headers: { Accept: 'application/json' },
+            },
+        );
+
+        if (!response.ok) {
+            const details = await response.text();
+            console.error('Jira project search failed:', response.status, details);
+            return { error: `Ошибка Jira API (${response.status})` };
+        }
+
+        const data = (await response.json()) as JiraProjectSearchResponse;
+
+        return {
+            projects: (data.values || []).map(mapProject),
+        };
+    } catch (error) {
+        console.error('getProjects failed:', error);
+        const message =
+            error instanceof Error ? error.message : 'Не удалось загрузить проекты';
+        return { error: message };
+    }
+});
 
 /**
  * Загружает задачи проекта через Jira REST API v3.

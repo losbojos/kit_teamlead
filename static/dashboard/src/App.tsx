@@ -1,18 +1,26 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { invoke, view } from '@forge/bridge';
 import { Box, CircularProgress, Tab, Tabs, Typography } from '@mui/material';
 import AutoAssignConfirmDialog from './components/AutoAssignConfirmDialog';
 import ControlPanel from './components/ControlPanel';
 import AssignModal from './components/AssignModal';
 import PriorityModal from './components/PriorityModal';
+import ProjectSelect from './components/ProjectSelect';
 import TeamTable from './components/TeamTable';
 import TasksTable from './TasksTable';
-import { AutoAssignResult, GetIssuesResult, GetProjectMembersResult, isApiError } from './types/api';
+import {
+    AutoAssignResult,
+    GetIssuesResult,
+    GetProjectMembersResult,
+    GetProjectsResult,
+    isApiError,
+} from './types/api';
 import { ISSUE_PROBLEM, Issue, IssueProblemType } from './types/issue';
 import type { ProjectMember } from './shared/types/member';
+import type { Project } from './shared/types/project';
 import { countIssueProblems } from './utils/issueRules';
 import { buildTeamMemberStats } from './utils/teamStats';
-import { FORGE_TAB_STYLE, FORGE_TABS_ROOT_STYLE } from './styles/forgeInline';
+import { FORGE_HEADER_ROW_STYLE, FORGE_TAB_STYLE, FORGE_TABS_ROOT_STYLE } from './styles/forgeInline';
 
 interface FixTarget {
     issue: Issue;
@@ -20,16 +28,18 @@ interface FixTarget {
 }
 
 function App() {
+    const [projects, setProjects] = useState<Project[]>([]);
     const [projectKey, setProjectKey] = useState<string | null>(null);
     const [issues, setIssues] = useState<Issue[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [initLoading, setInitLoading] = useState(true);
+    const [dataLoading, setDataLoading] = useState(false);
     const [fixTarget, setFixTarget] = useState<FixTarget | null>(null);
     const [autoAssignOpen, setAutoAssignOpen] = useState(false);
     const [autoAssigning, setAutoAssigning] = useState(false);
     const [autoAssignError, setAutoAssignError] = useState<string | null>(null);
     const [members, setMembers] = useState<ProjectMember[]>([]);
-    const [membersLoading, setMembersLoading] = useState(true);
+    const [membersLoading, setMembersLoading] = useState(false);
     const [membersError, setMembersError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState(0);
 
@@ -91,6 +101,97 @@ function App() {
         }
     };
 
+    const loadProjectData = useCallback(async (key: string) => {
+        setDataLoading(true);
+        setMembersLoading(true);
+        setMembersError(null);
+        setError(null);
+        setFixTarget(null);
+        setAutoAssignOpen(false);
+
+        try {
+            const [issuesResult, membersResult] = await Promise.all([
+                invoke('getIssues', { projectKey: key }) as Promise<GetIssuesResult>,
+                invoke('getProjectMembers', { projectKey: key }) as Promise<GetProjectMembersResult>,
+            ]);
+
+            if (isApiError(issuesResult)) {
+                setError(issuesResult.error);
+                setIssues([]);
+            } else {
+                setIssues(issuesResult.issues || []);
+            }
+
+            if (isApiError(membersResult)) {
+                setMembersError(membersResult.error);
+                setMembers([]);
+            } else {
+                setMembers(membersResult.members || []);
+            }
+        } catch (loadError) {
+            const message = loadError instanceof Error
+                ? loadError.message
+                : 'Ошибка загрузки данных проекта';
+            setError(message);
+        } finally {
+            setDataLoading(false);
+            setMembersLoading(false);
+        }
+    }, []);
+
+    const handleProjectChange = (key: string) => {
+        setProjectKey(key);
+    };
+
+    useEffect(() => {
+        async function initApp() {
+            try {
+                const [context, projectsResult] = await Promise.all([
+                    view.getContext(),
+                    invoke('getProjects') as Promise<GetProjectsResult>,
+                ]);
+
+                if (isApiError(projectsResult)) {
+                    setError(projectsResult.error);
+                    return;
+                }
+
+                const projectList = projectsResult.projects || [];
+                setProjects(projectList);
+
+                if (projectList.length === 0) {
+                    setError('Нет доступных проектов');
+                    return;
+                }
+
+                const contextKey = context?.extension?.project?.key;
+                const initialKey = contextKey
+                    && projectList.some((project) => project.key === contextKey)
+                    ? contextKey
+                    : projectList[0].key;
+
+                setProjectKey(initialKey);
+            } catch (initError) {
+                const message = initError instanceof Error
+                    ? initError.message
+                    : 'Ошибка инициализации';
+                setError(message);
+            } finally {
+                setInitLoading(false);
+            }
+        }
+
+        initApp();
+    }, []);
+
+    useEffect(() => {
+        if (!projectKey || initLoading) {
+            return;
+        }
+
+        loadProjectData(projectKey);
+    }, [projectKey, initLoading, loadProjectData]);
+
     const assignModalOpen = Boolean(
         fixTarget
         && fixTarget.problemType === ISSUE_PROBLEM.UNASSIGNED
@@ -102,51 +203,6 @@ function App() {
         && fixTarget.problemType === ISSUE_PROBLEM.LOW_PRIORITY_DEADLINE,
     );
 
-    useEffect(() => {
-        async function loadProjectData() {
-            try {
-                const context = await view.getContext();
-                const key = context?.extension?.project?.key;
-
-                if (!key) {
-                    setError('Не удалось определить ключ проекта из контекста Jira');
-                    setLoading(false);
-                    setMembersLoading(false);
-                    return;
-                }
-
-                setProjectKey(key);
-
-                const [issuesResult, membersResult] = await Promise.all([
-                    invoke('getIssues', { projectKey: key }) as Promise<GetIssuesResult>,
-                    invoke('getProjectMembers', { projectKey: key }) as Promise<GetProjectMembersResult>,
-                ]);
-
-                if (isApiError(issuesResult)) {
-                    setError(issuesResult.error);
-                } else {
-                    setIssues(issuesResult.issues || []);
-                }
-
-                if (isApiError(membersResult)) {
-                    setMembersError(membersResult.error);
-                } else {
-                    setMembers(membersResult.members || []);
-                }
-            } catch (loadError) {
-                const message = loadError instanceof Error
-                    ? loadError.message
-                    : 'Ошибка загрузки данных';
-                setError(message);
-            } finally {
-                setLoading(false);
-                setMembersLoading(false);
-            }
-        }
-
-        loadProjectData();
-    }, []);
-
     const problemCounts = useMemo(() => countIssueProblems(issues), [issues]);
     const unassignedCount = problemCounts[ISSUE_PROBLEM.UNASSIGNED];
     const teamStats = useMemo(
@@ -154,16 +210,16 @@ function App() {
         [members, issues],
     );
 
-    if (loading) {
+    if (initLoading) {
         return (
             <Box display="flex" alignItems="center" gap={2} p={2}>
                 <CircularProgress size={24} />
-                <Typography>Загрузка задач...</Typography>
+                <Typography>Загрузка...</Typography>
             </Box>
         );
     }
 
-    if (error) {
+    if (error && !projectKey) {
         return (
             <Box p={2}>
                 <Typography color="error">Ошибка: {error}</Typography>
@@ -199,9 +255,14 @@ function App() {
                     onConfirm={handleAutoAssignConfirm}
                 />
             )}
-            <Typography variant="h6" gutterBottom>
-                Проект: {projectKey}
-            </Typography>
+            <div style={FORGE_HEADER_ROW_STYLE}>
+                <ProjectSelect
+                    projects={projects}
+                    projectKey={projectKey}
+                    disabled={dataLoading}
+                    onProjectChange={handleProjectChange}
+                />
+            </div>
             <Tabs
                 value={activeTab}
                 onChange={(_event, newValue: number) => setActiveTab(newValue)}
@@ -210,23 +271,37 @@ function App() {
                 <Tab label="Dashboard" style={FORGE_TAB_STYLE} />
                 <Tab label="Team" />
             </Tabs>
-            {activeTab === 0 && (
+            {dataLoading ? (
+                <Box display="flex" alignItems="center" gap={2} py={2}>
+                    <CircularProgress size={22} />
+                    <Typography variant="body2">Загрузка данных проекта...</Typography>
+                </Box>
+            ) : (
                 <>
-                    <ControlPanel
-                        total={issues.length}
-                        problemCounts={problemCounts}
-                        unassignedCount={unassignedCount}
-                        onAutoAssignClick={handleAutoAssignClick}
-                    />
-                    <TasksTable issues={issues} onFixClick={handleFixClick} />
+                    {error && (
+                        <Typography color="error" sx={{ mb: 2 }}>
+                            Ошибка: {error}
+                        </Typography>
+                    )}
+                    {activeTab === 0 && (
+                        <>
+                            <ControlPanel
+                                total={issues.length}
+                                problemCounts={problemCounts}
+                                unassignedCount={unassignedCount}
+                                onAutoAssignClick={handleAutoAssignClick}
+                            />
+                            <TasksTable issues={issues} onFixClick={handleFixClick} />
+                        </>
+                    )}
+                    {activeTab === 1 && (
+                        <TeamTable
+                            members={teamStats}
+                            loading={membersLoading}
+                            error={membersError}
+                        />
+                    )}
                 </>
-            )}
-            {activeTab === 1 && (
-                <TeamTable
-                    members={teamStats}
-                    loading={membersLoading}
-                    error={membersError}
-                />
             )}
         </Box>
     );

@@ -27,3 +27,14 @@ export interface JiraAssignableUser {
         '48x48'?: string;
     };
 }
+
+/** Проект из GET /rest/api/3/project/search */
+export interface JiraProject {
+    id: string;
+    key: string;
+    name: string;
+}
+
+export interface JiraProjectSearchResponse {
+    values?: JiraProject[];
+}
