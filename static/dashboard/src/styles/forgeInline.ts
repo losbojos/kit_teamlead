@@ -108,3 +108,14 @@ export function forgePickerListItemStyle(isSelected: boolean): CSSProperties {
 export const FORGE_MODAL_CONFIRM_BUTTON_STYLE: CSSProperties = {
     minWidth: 128,
 };
+
+/** Контейнер вкладок — отступ снизу (sx не работает). */
+export const FORGE_TABS_ROOT_STYLE: CSSProperties = {
+    marginTop: 2,
+    marginBottom: 4,
+};
+
+/** Отступ между кнопками вкладок. */
+export const FORGE_TAB_STYLE: CSSProperties = {
+    marginRight: 4,
+};

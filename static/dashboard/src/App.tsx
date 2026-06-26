@@ -1,14 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { invoke, view } from '@forge/bridge';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress, Tab, Tabs, Typography } from '@mui/material';
 import AutoAssignConfirmDialog from './components/AutoAssignConfirmDialog';
 import ControlPanel from './components/ControlPanel';
 import AssignModal from './components/AssignModal';
 import PriorityModal from './components/PriorityModal';
+import TeamTable from './components/TeamTable';
 import TasksTable from './TasksTable';
-import { AutoAssignResult, GetIssuesResult, isApiError } from './types/api';
+import { AutoAssignResult, GetIssuesResult, GetProjectMembersResult, isApiError } from './types/api';
 import { ISSUE_PROBLEM, Issue, IssueProblemType } from './types/issue';
+import type { ProjectMember } from './shared/types/member';
 import { countIssueProblems } from './utils/issueRules';
+import { buildTeamMemberStats } from './utils/teamStats';
+import { FORGE_TAB_STYLE, FORGE_TABS_ROOT_STYLE } from './styles/forgeInline';
 
 interface FixTarget {
     issue: Issue;
@@ -24,6 +28,10 @@ function App() {
     const [autoAssignOpen, setAutoAssignOpen] = useState(false);
     const [autoAssigning, setAutoAssigning] = useState(false);
     const [autoAssignError, setAutoAssignError] = useState<string | null>(null);
+    const [members, setMembers] = useState<ProjectMember[]>([]);
+    const [membersLoading, setMembersLoading] = useState(true);
+    const [membersError, setMembersError] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState(0);
 
     const handleFixClick = (issue: Issue, problemType: IssueProblemType) => {
         setFixTarget({ issue, problemType });
@@ -95,7 +103,7 @@ function App() {
     );
 
     useEffect(() => {
-        async function loadIssues() {
+        async function loadProjectData() {
             try {
                 const context = await view.getContext();
                 const key = context?.extension?.project?.key;
@@ -103,35 +111,48 @@ function App() {
                 if (!key) {
                     setError('Не удалось определить ключ проекта из контекста Jira');
                     setLoading(false);
+                    setMembersLoading(false);
                     return;
                 }
 
                 setProjectKey(key);
 
-                const result = await invoke('getIssues', { projectKey: key }) as GetIssuesResult;
+                const [issuesResult, membersResult] = await Promise.all([
+                    invoke('getIssues', { projectKey: key }) as Promise<GetIssuesResult>,
+                    invoke('getProjectMembers', { projectKey: key }) as Promise<GetProjectMembersResult>,
+                ]);
 
-                if (isApiError(result)) {
-                    setError(result.error);
-                    setLoading(false);
-                    return;
+                if (isApiError(issuesResult)) {
+                    setError(issuesResult.error);
+                } else {
+                    setIssues(issuesResult.issues || []);
                 }
 
-                setIssues(result.issues || []);
+                if (isApiError(membersResult)) {
+                    setMembersError(membersResult.error);
+                } else {
+                    setMembers(membersResult.members || []);
+                }
             } catch (loadError) {
                 const message = loadError instanceof Error
                     ? loadError.message
-                    : 'Ошибка загрузки задач';
+                    : 'Ошибка загрузки данных';
                 setError(message);
             } finally {
                 setLoading(false);
+                setMembersLoading(false);
             }
         }
 
-        loadIssues();
+        loadProjectData();
     }, []);
 
     const problemCounts = useMemo(() => countIssueProblems(issues), [issues]);
     const unassignedCount = problemCounts[ISSUE_PROBLEM.UNASSIGNED];
+    const teamStats = useMemo(
+        () => buildTeamMemberStats(members, issues),
+        [members, issues],
+    );
 
     if (loading) {
         return (
@@ -181,13 +202,32 @@ function App() {
             <Typography variant="h6" gutterBottom>
                 Проект: {projectKey}
             </Typography>
-            <ControlPanel
-                total={issues.length}
-                problemCounts={problemCounts}
-                unassignedCount={unassignedCount}
-                onAutoAssignClick={handleAutoAssignClick}
-            />
-            <TasksTable issues={issues} onFixClick={handleFixClick} />
+            <Tabs
+                value={activeTab}
+                onChange={(_event, newValue: number) => setActiveTab(newValue)}
+                style={FORGE_TABS_ROOT_STYLE}
+            >
+                <Tab label="Dashboard" style={FORGE_TAB_STYLE} />
+                <Tab label="Team" />
+            </Tabs>
+            {activeTab === 0 && (
+                <>
+                    <ControlPanel
+                        total={issues.length}
+                        problemCounts={problemCounts}
+                        unassignedCount={unassignedCount}
+                        onAutoAssignClick={handleAutoAssignClick}
+                    />
+                    <TasksTable issues={issues} onFixClick={handleFixClick} />
+                </>
+            )}
+            {activeTab === 1 && (
+                <TeamTable
+                    members={teamStats}
+                    loading={membersLoading}
+                    error={membersError}
+                />
+            )}
         </Box>
     );
 }
